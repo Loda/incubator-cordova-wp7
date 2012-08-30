@@ -87,6 +87,8 @@ namespace WP7CordovaClassLib
         /// </summary>
         public bool ScrollDisabled { get; set; }
 
+        public bool DisableAllScrolling { get; set; }
+
         private bool userScalable = true;
         private double maxScale = 2.0;
         private double minScale = 0.5;
@@ -268,7 +270,7 @@ namespace WP7CordovaClassLib
 
                 InvokeSimulatedMouseEvent("mousedown", pos);
                 firstMouseMove = false;
-                ScrollDisabled = InvokeSimulatedMouseEvent("mousemove", pos);
+                ScrollDisabled = InvokeSimulatedMouseEvent("mousemove", pos) || DisableAllScrolling;
             }
             else
             {
@@ -288,7 +290,7 @@ namespace WP7CordovaClassLib
                 Point pos = e.GetPosition(_browser);
                 e.Handled = InvokeSimulatedMouseEvent("mouseup", pos);
             }
-            ScrollDisabled = false;
+            ScrollDisabled = false || DisableAllScrolling;
         }
 
 
@@ -298,18 +300,24 @@ namespace WP7CordovaClassLib
 
         void Border_ManipulationStarted(object sender, ManipulationStartedEventArgs e)
         {
-            //Debug.WriteLine("Border_ManipulationStarted");
+            Debug.WriteLine("Border_ManipulationStarted");
 
-            if (ScrollDisabled)
+            if (ScrollDisabled || DisableAllScrolling)
             {
                 e.Handled = true;
                 e.Complete();
             }
+            else
+            {
+
+            }
+
         }
 
         private void Border_ManipulationDelta(object sender, ManipulationDeltaEventArgs e)
         {
-            //Debug.WriteLine("Border_ManipulationDelta");
+            Debug.WriteLine("Border_ManipulationDelta");
+
             // optionally suppress zoom
             if ((ScrollDisabled || !userScalable) && (e.DeltaManipulation.Scale.X != 0.0 || e.DeltaManipulation.Scale.Y != 0.0))
             {
@@ -317,16 +325,17 @@ namespace WP7CordovaClassLib
                 e.Complete();
             }
             // optionally suppress scrolling
-            if (ScrollDisabled && (e.DeltaManipulation.Translation.X != 0.0 || e.DeltaManipulation.Translation.Y != 0.0))
+            else if (ScrollDisabled && (e.DeltaManipulation.Translation.X != 0.0 || e.DeltaManipulation.Translation.Y != 0.0))
             {
                 e.Handled = true;
                 e.Complete();
             }
+
         }
 
         private void Border_ManipulationCompleted(object sender, ManipulationCompletedEventArgs e)
         {
-            //Debug.WriteLine("Border_ManipulationCompleted");
+            Debug.WriteLine("Border_ManipulationCompleted");
             // suppress zoom
             if (!userScalable && e.FinalVelocities != null)
             {
